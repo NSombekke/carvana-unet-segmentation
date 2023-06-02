@@ -2,7 +2,7 @@ import os
 import glob
 
 from skimage.io import imread
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader
 
 class CarvanaDataset(Dataset):
     def __init__(self, root_dir, split="train", split_ratio=0.8, image_transform=None, mask_transform=None):
@@ -46,4 +46,34 @@ def get_dataloaders(root_dir, batch_size, num_workers, transforms, split_ratio=0
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dl = DataLoader(val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers)
     test_dl = DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    return train_dl, val_dl, test_dl    
+    return train_dl, val_dl, test_dl
+
+#====================================================================================================
+
+def download_datasets(data_dir='../data', quiet=False):
+    import zipfile
+    import os
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    # Make sure Kaggle public API is available 
+    # ref.: https://www.kaggle.com/docs/api
+    api = KaggleApi()
+    api.authenticate()
+    # Download files
+    print("Downloading files...")
+    api.competition_download_file('carvana-image-masking-challenge', file_name='metadata.csv.zip', path=data_dir, quiet=quiet)
+    api.competition_download_file('carvana-image-masking-challenge', file_name='sample_submission.csv.zip', path=data_dir, quiet=quiet)
+    api.competition_download_file('carvana-image-masking-challenge', file_name='test.zip', path=data_dir, quiet=quiet)
+    api.competition_download_file('carvana-image-masking-challenge', file_name='train.zip', path=data_dir, quiet=quiet)
+    api.competition_download_file('carvana-image-masking-challenge', file_name='train_masks.csv.zip', path=data_dir, quiet=quiet)
+    api.competition_download_file('carvana-image-masking-challenge', file_name='train_masks.zip', path=data_dir, quiet=quiet)
+    # Extract and remove zip files
+    print("Extracting files...")
+    for item in os.listdir(data_dir):
+        if item.endswith('.zip'):
+            file_name = os.path.join(data_dir, item)
+            zip_ref = zipfile.ZipFile(file_name)
+            zip_ref.extractall(data_dir)
+            zip_ref.close()
+            os.remove(file_name)
+    print("Finished downloading dataset!")
+    
