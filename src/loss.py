@@ -5,7 +5,7 @@ class DiceLoss(nn.Module):
     def __init__(self):
         super(DiceLoss, self).__init__()
         self.epsilon = 1e-6
-    def forward(self, target, pred):
+    def forward(self, pred, target):
         numerator = 2 * torch.sum(target * pred) + self.epsilon
         denominator = torch.sum(torch.square(target)) + torch.sum(torch.square(pred)) + self.epsilon
         return 1 - (numerator / denominator)
