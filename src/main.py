@@ -6,9 +6,10 @@ from tqdm import tqdm
 from torch.optim import Adam
 from datetime import datetime
 from copy import deepcopy
+from functools import partialmethod
 
 from utils import set_seed, save_model
-from dataset import get_dataloaders
+from dataset import get_dataloaders, download_datasets
 from model import get_model
 from loss import get_loss_func
 from transform import get_transforms
@@ -71,14 +72,17 @@ def test(model, test_dl, device, args):
             pred = model(image)
 
 def main(args):
+    if args.download:
+        download_datasets(args.data_dir)
     set_seed(args.seed)
+    tqdm.__init__ = partialmethod(tqdm.__init__, disable=args.no_progress)
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
     print(f"Using {device}")
     model = get_model(args.model_name)
     model.to(device)
     loss_func = get_loss_func(args.loss_func)
     optimizer = Adam(model.parameters(), lr=args.lr)
-    transforms = get_transforms(args.img_size)
+    transforms = get_transforms(args.input_size)
     train_dl, val_dl, test_dl = get_dataloaders(args.data_dir, args.batch_size, args.num_workers, transforms)
     if args.eval:
         test(model, test_dl, device, args)
@@ -91,15 +95,17 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, help="output directory", default="../output")
     parser.add_argument("--model_path", type=str, help="model path for continue training or evaluation", default="")
     parser.add_argument("--batch_size", type=int, help="batch size", default=16)
-    parser.add_argument("--num_workers", type=int, help="number of workers", default=4)
-    parser.add_argument("--num_epochs", type=int, help="number of epochs", default=100)
+    parser.add_argument("--num_workers", type=int, help="number of workers", default=2)
+    parser.add_argument("--num_epochs", type=int, help="number of epochs", default=50)
     parser.add_argument("--lr", type=float, help="learning rate", default=0.0001)
     parser.add_argument("--loss_func", type=str, help="loss function", default="dice")
     parser.add_argument("--model_name", type=str, help="model name", default="unet")
     parser.add_argument("--cpu", action="store_true", help="use cpu")
-    parser.add_argument("--img_size", type=tuple, help="image size", default=(1280, 1918))
+    parser.add_argument("--input_size", type=tuple, help="input size", default=(320, 480))
     parser.add_argument("--seed", type=int, help="random seed", default=42)
+    parser.add_argument("--download", action="store_true", help="download datasets")
     parser.add_argument("--eval", action="store_true", help="evaluate model")
+    parser.add_argument("--no_progress", action="store_true", help="show no tqdm progress bar")
     args = parser.parse_args()
     
     main(args)
