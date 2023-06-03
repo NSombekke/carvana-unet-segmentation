@@ -20,6 +20,8 @@ def train(model, loss_func, optimizer, train_dl, val_dl, device, args):
     best_model = None
     best_loss = float('inf')
     model_id = f"{args.model_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    model_dir = os.path.join(args.output_dir, model_id)
+    os.makedirs(model_dir)
     
     if args.model_path:
         checkpoint = torch.load(args.model_path)
@@ -36,8 +38,8 @@ def train(model, loss_func, optimizer, train_dl, val_dl, device, args):
             best_epoch = epoch
             best_model = deepcopy(model)
         print(f"Epoch: {epoch} | Train Loss: {train_loss} | Val Loss: {val_loss}")
-        save_model(os.path.join(args.output_dir, f"{model_id}_{epoch}.pth"), model, optimizer, best_loss, epoch)
-    save_model(os.path.join(args.output_dir, f"{model_id}_best{best_epoch}.pth"), best_model, optimizer, best_loss, best_epoch)
+        save_model(os.path.join(model_dir, f"{model_id}_{epoch}.pth"), model, optimizer, best_loss, epoch)
+    save_model(os.path.join(model_dir, f"{model_id}_best{best_epoch}.pth"), best_model, optimizer, best_loss, best_epoch)
 
 def train_loop(model, loss_func, optimizer, train_dl, device):
     model.train()
