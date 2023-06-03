@@ -1,5 +1,4 @@
 from torchvision import transforms
-from torch.nn.functional import pad
 
 def get_transforms(input_size):
     image_transform = transforms.Compose([transforms.ToPILImage(),
