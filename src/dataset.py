@@ -1,5 +1,6 @@
 import os
 import glob
+import torch
 
 from skimage.io import imread
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -22,6 +23,7 @@ class CarvanaDataset(Dataset):
         if self.split == "train":
             image = imread(self.image_paths[idx])
             mask = imread(self.mask_paths[idx], as_gray=True)
+            print(image.dtype, mask.dtype)
             if self.image_transform and self.mask_transform:
                 image, mask = self.image_transform(image), self.mask_transform(mask)
             return image, mask
